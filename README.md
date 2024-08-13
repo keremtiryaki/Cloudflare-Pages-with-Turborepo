@@ -46,4 +46,5 @@ pnpm run remote-create-db
 pnpm remote-migrate
 pnpm run deploy
 # set your preview d1 binding with dashboard by opening deployed apps and checking their settings->functions->D1 database bindings->preview
+# D1_DB -> test-d1-db
 ```
