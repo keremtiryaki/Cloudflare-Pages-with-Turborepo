@@ -23,7 +23,7 @@ export default defineConfig({
   ]
 })
 
-
+// it does not stop after the build, so this plugin helps to stop the process
 function ClosePlugin() {
   return {
       name: 'ClosePlugin', // required, will show up in warnings and errors

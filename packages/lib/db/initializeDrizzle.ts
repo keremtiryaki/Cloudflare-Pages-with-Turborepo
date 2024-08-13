@@ -6,5 +6,6 @@ export function initializeDrizzle(D1: D1Database): DrizzleD1Database {
 
 export type HonoVariables = {
     DATABASE: D1Database,
-    DRIZZLE: DrizzleD1Database
+    DRIZZLE: DrizzleD1Database,
+    R2_BUCKET: R2Bucket
 }

@@ -10,5 +10,12 @@ database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 preview_database_id = "D1_DB" 
 migrations_dir = "./db/sql-migrations"
 
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "local-r2-bucket"
+preview_bucket_name = "R2_BUCKET"
+# jurisdiction = ""
+
+
 [vars]
 API_HOST = "example.com"

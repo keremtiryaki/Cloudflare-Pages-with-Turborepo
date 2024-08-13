@@ -6,19 +6,21 @@
   "author": "",
   "license": "ISC",
   "scripts": {
-    "dev": "wrangler pages dev ./dist --persist-to=.wrangler/state/ --port 3000 --live-reload --show-interactive-dev-session=false",
+    "dev": "run-p dev:*",
+    "dev:wrangler": "wrangler pages dev ./dist --persist-to=.wrangler/state/ --port 3000 --live-reload --show-interactive-dev-session=false",
+    "dev:public-cdn-live-server": "live-server ./.wrangler/state/v3/r2-local-cdn --port=3004 --no-browser",
     "gen-sql": "drizzle-kit generate",
     "local-migrate": "wrangler d1 migrations apply D1_DB --local --persist-to=.wrangler/state/",
     "remote-migrate": "wrangler d1 migrations apply test-d1-db --remote --config=./wrangler-test-db.toml",
     "remote-create-db": "wrangler d1 create test-d1-db",
     "cf-typegen": "./cf-typegen.sh"
-    
   },
   "dependencies": {
     "drizzle-orm": "^0.33.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240806.0",
     "drizzle-kit": "^0.24.0",
-    "@cloudflare/workers-types": "^4.20240806.0"
+    "live-server": "^1.2.2"
   }
 }
