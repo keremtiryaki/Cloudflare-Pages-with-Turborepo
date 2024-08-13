@@ -44,7 +44,7 @@ pnpm local-migrate
 pnpm run remote-create-db
 # update packages/lib/wrangler-test-db.toml with the new db id. required for "remote-migrate" command for D1 database
 pnpm remote-migrate
-pnpm run deploy
+pnpm run deploy # ssl may take a while to be issued
 # set your preview d1 binding with dashboard by opening deployed apps and checking their settings->functions->D1 database bindings->preview
 # D1_DB -> test-d1-db
 ```
