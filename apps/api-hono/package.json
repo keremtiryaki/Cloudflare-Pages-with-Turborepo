@@ -1,0 +1,21 @@
+{
+  "name": "api-hono",
+  "scripts": {
+    "dev": "run-p dev:*",
+		"dev:wrangler": "run-s wait-cf-local-wrangler && wrangler pages dev ./dist --port 3001 --live-reload --d1 D1_DB --persist-to=../../packages/lib/.wrangler/state/ --compatibility-date=2024-08-12 --show-interactive-dev-session=false",
+		"dev:esbuild": "esbuild --bundle src/index.ts --format=esm --watch --outfile=dist/_worker.js",
+    "wait-cf-local-wrangler": "wait-on tcp:3000",
+    "build": "esbuild --bundle src/index.ts --format=esm --outfile=dist/_worker.js",
+    "deploy": "pnpm build && wrangler pages deploy dist --project-name=api-hono --branch=test --upload-source-maps",
+    "_dev": "wrangler dev",
+    "_cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "hono": "^4.5.5",
+    "lib": "workspace:*"
+  },
+  "devDependencies": {
+    "wrangler": "^3.57.2",
+    "esbuild": "^0.23.0"
+  }
+}

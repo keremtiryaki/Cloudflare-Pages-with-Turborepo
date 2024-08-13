@@ -1,0 +1,24 @@
+{
+  "name": "lib",
+  "version": "1.0.0",
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "dev": "wrangler pages dev ./dist --persist-to=.wrangler/state/ --port 3000 --show-interactive-dev-session=false",
+    "gen-sql": "drizzle-kit generate",
+    "local-migrate": "wrangler d1 migrations apply D1_DB --local --persist-to=.wrangler/state/",
+    "remote-migrate": "wrangler d1 migrations apply test-d1-db --remote --config=./wrangler-test-db.toml",
+    "remote-create-db": "wrangler d1 create test-d1-db"
+
+    
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.33.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.24.0",
+    "@cloudflare/workers-types": "^4.20240806.0"
+  }
+}

@@ -1,0 +1,12 @@
+---
+import { users } from 'lib/db/schema/users'
+import { initializeDrizzle } from 'lib/db/initializeDrizzle'
+const DATABASE = Astro.locals.runtime.env.D1_DB;
+const DRIZZLE = initializeDrizzle(DATABASE)
+
+const result = await DRIZZLE.select().from(users).all();
+---
+production:{import.meta.env.PROD}
+<br>
+Users:
+<pre>{JSON.stringify(result, null, 2)}</pre>

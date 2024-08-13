@@ -1,0 +1,14 @@
+#this configuration is required for "remote-migrate" command for D1 database
+
+#:schema node_modules/wrangler/config-schema.json
+name = "local-wrangler"
+compatibility_date = "2024-08-12"
+pages_build_output_dir = "./dist"
+
+
+[[d1_databases]]
+binding = "D1_DB" # i.e. available in your Worker on env.DB
+database_name = "test-d1-db"
+database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+migrations_dir = "./db/sql-migrations"
+preview_database_id = "D1_DB" 
