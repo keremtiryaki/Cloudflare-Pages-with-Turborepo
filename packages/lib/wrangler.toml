@@ -9,3 +9,6 @@ database_name = "local-d1-db"
 database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 preview_database_id = "D1_DB" 
 migrations_dir = "./db/sql-migrations"
+
+[vars]
+API_HOST = "example.com"

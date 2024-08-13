@@ -4,11 +4,12 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "deploy": "cd apps/api-hono && pnpm run deploy && cd ../api-hono-2 && pnpm run deploy && cd ../web-astro && pnpm run deploy",
+    "deploy": "./deploy.sh",
     "gen-sql": "cd packages/lib && pnpm gen-sql",
     "local-migrate": "cd packages/lib && pnpm local-migrate",
     "remote-create-db": "cd packages/lib && pnpm remote-create-db",
-    "remote-migrate": "cd packages/lib && pnpm remote-migrate"
+    "remote-migrate": "cd packages/lib && pnpm remote-migrate",
+    "cf-typegen": "cd packages/lib && pnpm cf-typegen"
   },
   "devDependencies": {
     "turbo": "^2.0.12",

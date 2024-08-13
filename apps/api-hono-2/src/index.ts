@@ -9,6 +9,7 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings, Variables: HonoVariables }>()
 app.use('*', async (c, next) => {
+  // console.log(`c.env.SECRET_KEY: ${c.env.SECRET_KEY}`)
   c.set('DATABASE', c.env.D1_DB);
   c.set('DRIZZLE', initializeDrizzle(c.env.D1_DB));
   await next();
@@ -17,8 +18,13 @@ app.use('*', async (c, next) => {
 
 app.get('/', async (c) => {
   const result = await c.get('DRIZZLE').select().from(users).all();
-  return c.text(`PROD:${import.meta.env.PROD}\nUsers: \n${JSON.stringify(result, null, 2)}`)
-})
+  return c.text(`
+    PROD:${import.meta.env.PROD}
+    c.env.SECRET_KEY:${c.env.SECRET_KEY}
+    c.env.API_HOST:${c.env.API_HOST}
+    Users: \n${JSON.stringify(result, null, 2)}`)
+});
+
 app.get('/add', async (c) => {
   const id = Math.random().toString(36).substring(7);
   await c.get('DRIZZLE').insert(users).values({

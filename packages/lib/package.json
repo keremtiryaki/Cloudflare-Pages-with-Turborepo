@@ -6,12 +6,12 @@
   "author": "",
   "license": "ISC",
   "scripts": {
-    "dev": "wrangler pages dev ./dist --persist-to=.wrangler/state/ --port 3000 --show-interactive-dev-session=false",
+    "dev": "wrangler pages dev ./dist --persist-to=.wrangler/state/ --port 3000 --live-reload --show-interactive-dev-session=false",
     "gen-sql": "drizzle-kit generate",
     "local-migrate": "wrangler d1 migrations apply D1_DB --local --persist-to=.wrangler/state/",
     "remote-migrate": "wrangler d1 migrations apply test-d1-db --remote --config=./wrangler-test-db.toml",
-    "remote-create-db": "wrangler d1 create test-d1-db"
-
+    "remote-create-db": "wrangler d1 create test-d1-db",
+    "cf-typegen": "./cf-typegen.sh"
     
   },
   "dependencies": {
