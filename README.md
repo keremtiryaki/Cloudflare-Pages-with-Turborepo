@@ -47,4 +47,5 @@ pnpm remote-migrate
 pnpm run deploy # ssl may take a while to be issued
 # set your preview d1 binding with dashboard by opening deployed apps and checking their settings->functions->D1 database bindings->preview
 # D1_DB -> test-d1-db
+pnpm run deploy # you may need to deploy again after setting the preview d1 binding
 ```
