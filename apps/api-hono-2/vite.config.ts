@@ -7,7 +7,8 @@ export default defineConfig({
   plugins: [
     ClosePlugin(),
     pages({
-      entry: 'src/index.ts'
+      entry: 'src/index.ts',
+      minify: true,
     }),
     devServer({
       adapter: adapter({

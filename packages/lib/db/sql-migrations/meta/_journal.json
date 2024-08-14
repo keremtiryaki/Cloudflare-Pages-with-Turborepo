@@ -8,6 +8,20 @@
       "when": 1723504432020,
       "tag": "0000_cute_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1723600116928,
+      "tag": "0001_dizzy_famine",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1723601569461,
+      "tag": "0002_numerous_wonder_man",
+      "breakpoints": true
     }
   ]
 }
