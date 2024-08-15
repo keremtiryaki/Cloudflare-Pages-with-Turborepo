@@ -80,7 +80,7 @@ app.get('/add-sample-restaurants', async (c) => {
     { websiteId: '1', restaurantId: '3' },
     { websiteId: '1', restaurantId: '4' },
     { websiteId: '1', restaurantId: '5' },
-    { websiteId: '1', restaurantId: '6' },
+    // { websiteId: '1', restaurantId: '6' },
   ]);
   await db.insert(hostnames).values([
     { hostname: 'localhost:3003', websiteId: '1' },

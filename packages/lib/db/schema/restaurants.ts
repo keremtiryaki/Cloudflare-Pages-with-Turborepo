@@ -29,14 +29,8 @@ export const restaurants = sqliteTable('restaurants', {
     maxLng: real('max_lng').notNull().default(0),
 }, (table) => {
     return {
-        latIndex: index('lat_idx').on(table.lat),
-        lngIndex: index('lng_idx').on(table.lng),
-        // You can also create a composite index on both lat and lng
         latLngIndex: index('lat_lng_idx').on(table.lat, table.lng),
-        minLatIndex: index('min_lat_idx').on(table.minLat),
-        maxLatIndex: index('max_lat_idx').on(table.maxLat),
-        minLngIndex: index('min_lng_idx').on(table.minLng),
-        maxLngIndex: index('max_lng_idx').on(table.maxLng)
+        boundingBoxIndex: index('bounding_box_idx').on(table.minLat, table.maxLat, table.minLng, table.maxLng),
     };
 });
 
@@ -80,11 +74,22 @@ export const getNearbyRestaurants = async (
     lng: string,
     db: DrizzleD1Database,
     hostname: string,
-    measure: 'km' | 'mi' = 'km'
+    measure: 'km' | 'mi' = 'km',
+    limit: number = 10,
+    offset: number = 0
 ) => {
     const radius = measure === 'km' ? 6371 : 3959;
     const userLat = parseFloat(lat);
     const userLng = parseFloat(lng);
+
+     // Calculate the bounding box for initial filtering
+     const latDelta = 1; // Approximately 111 km or 69 miles
+     const lngDelta = 1 / Math.cos(userLat * Math.PI / 180);
+ 
+     const minLat = userLat - latDelta;
+     const maxLat = userLat + latDelta;
+     const minLng = userLng - lngDelta;
+     const maxLng = userLng + lngDelta;
 
     const nearbyRestaurants = await db
         .select({
@@ -92,29 +97,48 @@ export const getNearbyRestaurants = async (
             name: restaurants.name,
             lat: restaurants.lat,
             lng: restaurants.lng,
-            // Haversine formula for great-circle distance
+
+            /////////////////////////
+            // v1 - Haversine formula for great-circle distance
             // distance: sql<number>`${radius} * 2 * ASIN(
             //     SQRT(
             //         (
-            //             SIN((${restaurants.lat} - ${userLat}) * PI() / 180 / 2) * 
+            //             SIN((${restaurants.lat} - ${userLat}) * PI() / 180 / 2) *
             //             SIN((${restaurants.lat} - ${userLat}) * PI() / 180 / 2)
             //         ) +
             //         COS(${userLat} * PI() / 180) *
             //         COS(${restaurants.lat} * PI() / 180) *
             //         (
-            //             SIN((${restaurants.lng} - ${userLng}) * PI() / 180 / 2) * 
+            //             SIN((${restaurants.lng} - ${userLng}) * PI() / 180 / 2) *
             //             SIN((${restaurants.lng} - ${userLng}) * PI() / 180 / 2)
             //         )
             //     )
             // )`.mapWith(Number).as('distance'),
+            /////////////////////////
 
-            simple_distance: sql<number>`${radius} * 2 * ASIN(
+
+            /////////////////////////
+            // v2 - simplified distance calculation
+            // distance: sql<number>`${radius} * 2 * ASIN(
+            //     SQRT(
+            //         0.5 - COS((${restaurants.lat} - ${userLat}) * PI() / 180) / 2 +
+            //         COS(${userLat} * PI() / 180) * COS(${restaurants.lat} * PI() / 180) *
+            //         (1 - COS((${restaurants.lng} - ${userLng}) * PI() / 180)) / 2
+            //     )
+            // )`.mapWith(Number).as('distance'),
+            /////////////////////////
+
+            
+            /////////////////////////
+            // v3 - simplified distance with 0.017453292519943295 as PI/180
+            distance: sql<number>`${radius} * 2 * ASIN(
                 SQRT(
-                    0.5 - COS((${restaurants.lat} - ${userLat}) * PI() / 180) / 2 + 
-                    COS(${userLat} * PI() / 180) * COS(${restaurants.lat} * PI() / 180) * 
-                    (1 - COS((${restaurants.lng} - ${userLng}) * PI() / 180)) / 2
+                    0.5 - COS((${restaurants.lat} - ${userLat}) * 0.017453292519943295) / 2 + 
+                    COS(${userLat} * 0.017453292519943295) * COS(${restaurants.lat} * 0.017453292519943295) * 
+                    (1 - COS((${restaurants.lng} - ${userLng}) * 0.017453292519943295)) / 2
                 )
-            )`.mapWith(Number).as('simple_distance')
+            )`.mapWith(Number).as('distance'),
+            /////////////////////////
         })
         .from(restaurants)
         .innerJoin(restaurantWebsites, eq(restaurants.id, restaurantWebsites.restaurantId))
@@ -123,14 +147,19 @@ export const getNearbyRestaurants = async (
         .where(
             and(
                 eq(hostnames.hostname, hostname),
-                lte(restaurants.minLat, userLat),
+                gte(restaurants.lat, minLat),
+                lte(restaurants.lat, maxLat),
+                gte(restaurants.lng, minLng),
+                lte(restaurants.lng, maxLng),
                 gte(restaurants.maxLat, userLat),
+                lte(restaurants.minLat, userLat),
+                gte(restaurants.maxLng, userLng),
                 lte(restaurants.minLng, userLng),
-                gte(restaurants.maxLng, userLng)
             )
         )
-        .orderBy(asc(sql`simple_distance`))
-        .limit(10);
+        .orderBy(asc(sql`distance`))
+        .limit(limit)
+        .offset(offset);
     
     return nearbyRestaurants;
 }
