@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { HonoVariables, initializeDrizzle } from 'lib/db/initializeDrizzle'
 import { CloudflareBindings } from 'lib/worker-configuration'
 import { users } from 'lib/db/schema/users'
-import { getNearbyRestaurants, restaurants } from 'lib/db/schema/restaurants'
+import { getNearbyRestaurants, hostnames, restaurants, restaurantWebsites, websites } from 'lib/db/schema/restaurants'
 
 type Bindings = {
   [key in keyof CloudflareBindings]: CloudflareBindings[key]
@@ -17,27 +17,87 @@ app.use('*', async (c, next) => {
   await next();
 });
 
+const calculateBoundingBox = (
+  userLat: number,
+  userLng: number,
+  measure: 'km' | 'mi' = 'km',
+  radius: number = 3
+) => {
+  // Earth's radius in km or miles
+  const earthRadius = measure === 'km' ? 6371 : 3959;
+  
+  // Convert latitude and longitude to radians
+  const latRad = userLat * Math.PI / 180;
+  const lngRad = userLng * Math.PI / 180;
 
+  // Angular distance in radians on a great circle
+  const angularDistance = radius / earthRadius;
+
+  // Calculate deltas
+  const latDelta = angularDistance * 180 / Math.PI;
+  const lngDelta = Math.asin(Math.sin(angularDistance) / Math.cos(latRad)) * 180 / Math.PI;
+
+  // Calculate bounding box coordinates
+  const minLat = userLat - latDelta;
+  const maxLat = userLat + latDelta;
+  const minLng = userLng - lngDelta;
+  const maxLng = userLng + lngDelta;
+
+  return { minLat, maxLat, minLng, maxLng };
+}
 
 app.get('/add-sample-restaurants', async (c) => {
   // sample user position: 43.6461002,-79.3751153
   const db = c.get('DRIZZLE');
-  await db.insert(restaurants).values([
+  await db.delete(websites).execute();
+  await db.delete(hostnames).execute();
+  await db.delete(restaurants).execute();
+  await db.delete(restaurantWebsites).execute();
+
+  await db.insert(websites).values([
+    { id: '1', name: 'sample' },
+  ]);
+  const sampelRestaurantsData = [
     { id: '1', name: 'Clutch Vape', lat: 43.64638058054689, lng: -79.37489199614096 },
     { id: '2', name: 'The Old Spaghetti Factory', lat: 43.64695608527815, lng: -79.37433991492232 },
     { id: '3', name: 'St. Lawrence Market', lat: 43.648732591007544, lng: -79.37168169792817 },
     { id: '4', name: 'The PUB', lat: 43.646373430972076, lng: -79.38310814709395 },
     { id: '5', name: 'Tim Hortons', lat: 43.647887104345685, lng: -79.37619090602158 },
     { id: '6', name: 'The Esplanade at Yonge St', lat: 43.645857049227835, lng: -79.37638611763383 },
+  ].map(restaurant => {
+    const { minLat, maxLat, minLng, maxLng } = calculateBoundingBox(restaurant.lat, restaurant.lng);
+    return {
+      ...restaurant,
+      minLat,
+      maxLat,
+      minLng,
+      maxLng,
+    };
+  });
+  await db.insert(restaurants).values(sampelRestaurantsData);
+  await db.insert(restaurantWebsites).values([
+    { websiteId: '1', restaurantId: '2' },
+    { websiteId: '1', restaurantId: '3' },
+    { websiteId: '1', restaurantId: '4' },
+    { websiteId: '1', restaurantId: '5' },
+    { websiteId: '1', restaurantId: '6' },
+  ]);
+  await db.insert(hostnames).values([
+    { hostname: 'localhost:3003', websiteId: '1' },
   ]);
   return c.text('Sample restaurants added');
 });
 
 
 app.get('/nearby-restaurants', async (c) => {
-  const cf = c.req.raw.cf as { latitude?: number; longitude?: number } | undefined;
-  const latitude = cf?.latitude?.toString() ?? '';
-  const longitude = cf?.longitude?.toString() ?? '';
+  // const cf = c.req.raw.cf as { latitude?: number; longitude?: number } | undefined;
+  // const latitude = cf?.latitude?.toString() ?? '';
+  // const longitude = cf?.longitude?.toString() ?? '';
+  
+  //user position: 43.6461002,-79.3751153
+  const latitude = "43.6461002";
+  const longitude = "-79.3751153";
+  
   const { lat = latitude, lng = longitude, measure = 'km' } = c.req.query();
   const userLat = parseFloat(lat);
   const userLng = parseFloat(lng);
@@ -48,9 +108,19 @@ app.get('/nearby-restaurants', async (c) => {
   const db = c.get('DRIZZLE');
   const nearbyRestaurants = await getNearbyRestaurants(
     lat, lng, db,
+    c.req.header('host') ?? '',
     measure === 'mi' ? 'mi' : 'km'
   );
-  return c.text(JSON.stringify(nearbyRestaurants, null, 2));
+  return c.text(`
+
+Latitude: ${lat}
+Longitude: ${lng}
+
+Hostname: ${c.req.header('host')}
+
+${JSON.stringify(nearbyRestaurants, null, 2)}
+
+  `);
 });
 
 
